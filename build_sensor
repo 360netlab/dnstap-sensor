@@ -10,6 +10,7 @@ make_libs()
 	echo "******** Build libs ********"
 
 	cd src/tinyframe
+	./autogen.sh
 	chmod +x configure
 	./configure --prefix=$root_dir
 	make ||exit 0;
@@ -17,6 +18,7 @@ make_libs()
 	cd -
 
 	cd src/dnswire
+	./autogen.sh
 	chmod +x configure
 	export tinyframe_CFLAGS="-I$root_dir/include/"
 	export tinyframe_LIBS="-L$root_dir/lib/ -ltinyframe"
@@ -83,6 +85,17 @@ build_rpm()
 if [ ! -d bin ];then mkdir bin; fi
 if [ ! -d include ];then mkdir include; fi
 if [ ! -d lib ];then mkdir lib; fi
+
+if [ "`ls -A $root_dir/src/dnswire`" = "" ]; then
+	git submodule init
+	git submodule update
+
+	cd src/dnswire
+	git submodule init
+	git submodule update
+	cd -
+fi
+
 
 if [ $# -eq 0 ]
 then
