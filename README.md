@@ -18,6 +18,10 @@ For example:
 dnstap-sensor -u /var/run/named/dnstap.sock -p local6.info -d
 ```
 
+Notice:
+
+Because dnstap-sensor and dns server exchange dnstap through unix socket, the uid of the process must be consistent with the uid of the dns server process.
+
 ## Dependency
 
 To install the dependency under CentOS: 
@@ -31,4 +35,5 @@ sudo yum install protobuf-c-devel
 git clone https://github.com/360netlab/dnstap-sensor 
 cd dnstap-sensor
 ./build_sensor
+rpm -ivh dnstap-sensor-[version-HEAD.arch].rpm
 ```
