@@ -1,0 +1,115 @@
+#!/bin/sh
+
+
+root_dir=`pwd`
+echo $root_dir
+export root_dir
+
+make_libs()
+{
+	echo "******** Build libs ********"
+
+	cd src/tinyframe
+	chmod +x configure
+	./configure --prefix=$root_dir
+	make ||exit 0;
+	make install
+	cd -
+
+	cd src/dnswire
+	chmod +x configure
+	export tinyframe_CFLAGS="-I$root_dir/include/"
+	export tinyframe_LIBS="-L$root_dir/lib/ -ltinyframe"
+	./configure --prefix=$root_dir --disable-examples
+	#./configure --prefix=$root_dir
+	make ||exit 0;
+	make install
+	cd -
+}
+
+make_apps()
+{
+	echo "******** Build apps ********"
+	cd src/sensor
+	make ||exit 0;
+	make install
+	cd -
+}
+
+make_clean()
+{
+	echo "******** Clean ********"
+    
+	if [ -d bin ];then rm -rf bin; fi
+	if [ -d share ];then rm -rf share; fi
+	if [ -d include ];then rm -rf include; fi
+	if [ -d lib ];then rm -rf lib; fi
+
+	#clean libs
+	cd src/tinyframe
+	make uninstall
+	make distclean
+	cd -
+
+	cd src/dnswire
+	make uninstall
+	make distclean
+	cd -
+
+	#clean apps
+	cd src/sensor
+	make clean
+	cd -
+
+	#clean rpm
+	cd rpmbuild
+	rm -rf BUILD BUILDROOT RPMS SOURCES SRPMS
+	cd -
+}
+
+build_rpm()
+{
+	cd rpmbuild
+	rm -rf BUILD BUILDROOT RPMS SOURCES SRPMS
+	mkdir -pv ./{BUILD,BUILDROOT,RPMS,SOURCES,SRPMS}
+	echo "%_topdir        "`pwd` > ~/.rpmmacros
+
+	rpmbuild -D "dist "`git rev-parse --short HEAD` -bb SPECS/dnstap_sensor.spec
+	cp RPMS/x86_64/dnstap-sensor-*.rpm $root_dir
+	cd -
+
+}
+
+if [ ! -d bin ];then mkdir bin; fi
+if [ ! -d include ];then mkdir include; fi
+if [ ! -d lib ];then mkdir lib; fi
+
+if [ $# -eq 0 ]
+then
+	make_libs
+	make_apps
+	build_rpm
+else
+	while [ $# -gt 0 ]
+	do
+		case $1 in
+			-l)
+				make_libs
+				;;
+			-a)
+				make_apps
+				;;
+			-r)
+				build_rpm
+				;;
+			-c)
+				make_clean
+				;;
+			*)
+				echo "Invalid paraments, MUST be [-r|-l|-a|-c]"
+		esac
+		shift
+	done
+
+fi
+
