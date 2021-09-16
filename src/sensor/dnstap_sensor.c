@@ -17,6 +17,9 @@
 #include <syslog.h>
 
 #include "b64.h"
+#include "sensor.h"
+
+static struct sensor_handle *g_sh = NULL;
 
 static const char* printable_ip_address(const uint8_t* data, size_t len)
 {
@@ -187,7 +190,8 @@ static int pencode(const char *s)
 
 void usage(char *argv[])
 {
-    fprintf(stderr, "usage: %s <-u unix socket path> <-p facility.priority> [-d]\n",
+    fprintf(stderr, "usage: %s <-u unix socket path> <-p facility.priority> " \
+                    "[-l facility.priority for log] [-d]\n",
             argv[0]);
 
 	exit(1);
@@ -200,9 +204,10 @@ int main(int argc, char* argv[])
 	int ch;
     char *sun_path = NULL;
     char *fac_pri = NULL;
+    char *log_fac_pri = "local6.debug";
     int dn = 0;
 
-	while ((ch = getopt(argc, argv, "u:p:d")) != -1) {
+	while ((ch = getopt(argc, argv, "u:p:dl:")) != -1) {
 		switch (ch) {
 		case 'd':
 			dn = 1;
@@ -213,6 +218,9 @@ int main(int argc, char* argv[])
 		case 'p':
 			fac_pri = optarg;
 			break;
+		case 'l':
+			log_fac_pri = optarg;
+			break;
 		default:
             usage(argv);
 		}
@@ -221,7 +229,16 @@ int main(int argc, char* argv[])
         usage(argv);
     }
 
+    g_sh = (struct sensor_handle *) calloc(1, sizeof(struct sensor_handle));
+    if (g_sh == NULL){
+        fprintf(stderr, "Failed to calloc g_sh\n");
+        return 1;
+    }
+
     pri = pencode(fac_pri);
+    g_sh->log_pri = pencode(log_fac_pri);
+
+    gethostname(g_sh->hostname, sizeof(g_sh->hostname));
 
     struct dnswire_reader reader;
     if (dnswire_reader_init(&reader) != dnswire_ok) {
@@ -237,6 +254,8 @@ int main(int argc, char* argv[])
 		err(1, "unable to daemonize");
 
 	signal(SIGPIPE, SIG_IGN);
+
+    sensor_log_init(g_sh);
 
     /******************************************/
     int reader_sockfd;
@@ -290,8 +309,10 @@ int main(int argc, char* argv[])
     while (!done) {
         switch (dnswire_reader_read(&reader, clifd)) {
         case dnswire_have_dnstap:
+            g_sh->count_input++;
             log = print_dnstap(dnswire_reader_dnstap(reader));
             if (log) {
+                g_sh->count_output++;
                 syslog(pri, "%s", log);
                 if (!dn)
                     printf("%s\n", log);
