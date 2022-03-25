@@ -1,6 +1,6 @@
 ## Dnstap-sensor
 
-The dnstap-sensor receives the DNS server's dnstap from the unix socket created by the -u parameter, and sends it to syslog after formatting.
+The dnstap-sensor receives the DNS server's dnstap from the unix or tcp socket, and sends it to syslog after formatting.
 
 Base64 copy from this [repository](https://github.com/littlstar/b64.c).
 
