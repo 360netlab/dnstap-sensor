@@ -23,119 +23,119 @@ static struct sensor_handle *g_sh = NULL;
 
 static const char* printable_ip_address(const uint8_t* data, size_t len)
 {
-    static char buf[INET6_ADDRSTRLEN];
+	static char buf[INET6_ADDRSTRLEN];
 
-    buf[0] = 0;
-    if (len == 4) {
-        inet_ntop(AF_INET, data, buf, sizeof(buf));
-    } else if (len == 16) {
-        inet_ntop(AF_INET6, data, buf, sizeof(buf));
-    }
+	buf[0] = 0;
+	if (len == 4) {
+		inet_ntop(AF_INET, data, buf, sizeof(buf));
+	} else if (len == 16) {
+		inet_ntop(AF_INET6, data, buf, sizeof(buf));
+	}
 
-    return buf;
+	return buf;
 }
 
 static char* print_dnstap(const struct dnstap* d)
 {
-    static char src[4096];
-    static char dst[8192];
-    char *enc;
-    size_t enc_len;
-    u_int8_t is_query;
+	static char src[4096];
+	static char dst[8192];
+	char *enc;
+	size_t enc_len;
+	u_int8_t is_query;
 
-    dst[0] = '\0';
+	dst[0] = '\0';
 
-    if (dnstap_type(*d) == DNSTAP_TYPE_MESSAGE && dnstap_has_message(*d)) {
-        if (dnstap_message_has_socket_family(*d)) {
-            if(dnstap_message_socket_family(*d) != DNSTAP_SOCKET_FAMILY_INET)
-                goto err;
-        }
-        if (dnstap_message_has_socket_protocol(*d)) {
-            if(dnstap_message_socket_protocol(*d) != DNSTAP_SOCKET_PROTOCOL_UDP)
-                goto err;
-        }
+	if (dnstap_type(*d) == DNSTAP_TYPE_MESSAGE && dnstap_has_message(*d)) {
+		if (dnstap_message_has_socket_family(*d)) {
+			if(dnstap_message_socket_family(*d) != DNSTAP_SOCKET_FAMILY_INET)
+				goto err;
+		}
+		if (dnstap_message_has_socket_protocol(*d)) {
+			if(dnstap_message_socket_protocol(*d) != DNSTAP_SOCKET_PROTOCOL_UDP)
+				goto err;
+		}
 
-        sprintf(src, "%s %d", 
-                    DNSTAP_MESSAGE_TYPE_STRING[dnstap_message_type(*d)],
-                    dnstap_message_type(*d));
-        strcat(dst, src);
+		sprintf(src, "%s %d", 
+					DNSTAP_MESSAGE_TYPE_STRING[dnstap_message_type(*d)],
+					dnstap_message_type(*d));
+		strcat(dst, src);
 
-        is_query = dnstap_message_type(*d) % 2;
+		is_query = dnstap_message_type(*d) % 2;
 
-        /*if (is_query && dnstap_message_has_query_time_sec(*d) 
-                && dnstap_message_has_query_time_nsec(*d)) {
-            sprintf(src, " %lu %d", 
-                        dnstap_message_query_time_sec(*d), 
-                        dnstap_message_query_time_nsec(*d));
-            strcat(dst, src);
-        }
+		/*if (is_query && dnstap_message_has_query_time_sec(*d) 
+				&& dnstap_message_has_query_time_nsec(*d)) {
+			sprintf(src, " %lu %d", 
+						dnstap_message_query_time_sec(*d), 
+						dnstap_message_query_time_nsec(*d));
+			strcat(dst, src);
+		}
 
-        if (!is_query && dnstap_message_has_response_time_sec(*d) 
-                && dnstap_message_has_response_time_nsec(*d)) {
-            sprintf(src, " %lu %d", 
-                        dnstap_message_response_time_sec(*d), 
-                        dnstap_message_response_time_nsec(*d));
-            strcat(dst, src);
-        }*/
+		if (!is_query && dnstap_message_has_response_time_sec(*d) 
+				&& dnstap_message_has_response_time_nsec(*d)) {
+			sprintf(src, " %lu %d", 
+						dnstap_message_response_time_sec(*d), 
+						dnstap_message_response_time_nsec(*d));
+			strcat(dst, src);
+		}*/
 
-        if (dnstap_message_has_query_address(*d)) {
-            sprintf(src, " %s", 
-                        printable_ip_address(dnstap_message_query_address(*d),
-                                dnstap_message_query_address_length(*d)));
-            strcat(dst, src);
-        }
+		if (dnstap_message_has_query_address(*d)) {
+			sprintf(src, " %s", 
+						printable_ip_address(dnstap_message_query_address(*d),
+								dnstap_message_query_address_length(*d)));
+			strcat(dst, src);
+		}
 
-        if (dnstap_message_has_query_port(*d)) {
-            sprintf(src, " %u", dnstap_message_query_port(*d));
-            strcat(dst, src);
-        }
+		if (dnstap_message_has_query_port(*d)) {
+			sprintf(src, " %u", dnstap_message_query_port(*d));
+			strcat(dst, src);
+		}
 
-        if (dnstap_message_has_response_address(*d)) {
-            sprintf(src, " %s", 
-                    printable_ip_address(dnstap_message_response_address(*d), 
-                                dnstap_message_response_address_length(*d)));
-            strcat(dst, src);
-        }
+		if (dnstap_message_has_response_address(*d)) {
+			sprintf(src, " %s", 
+					printable_ip_address(dnstap_message_response_address(*d), 
+								dnstap_message_response_address_length(*d)));
+			strcat(dst, src);
+		}
 
-        if (dnstap_message_has_response_port(*d)) {
-            sprintf(src, " %u", dnstap_message_response_port(*d));
-            strcat(dst, src);
-        }
+		if (dnstap_message_has_response_port(*d)) {
+			sprintf(src, " %u", dnstap_message_response_port(*d));
+			strcat(dst, src);
+		}
 
-        if (is_query && dnstap_message_has_query_time_sec(*d)
-                && dnstap_message_has_query_message(*d)) {
-            sprintf(src, " %lu", dnstap_message_query_message_length(*d));
-            strcat(dst, src);
+		if (is_query && dnstap_message_has_query_time_sec(*d)
+				&& dnstap_message_has_query_message(*d)) {
+			sprintf(src, " %lu", dnstap_message_query_message_length(*d));
+			strcat(dst, src);
 
-            enc = b64_encode(dnstap_message_query_message(*d),
-                                dnstap_message_query_message_length(*d),
-                                &enc_len);
+			enc = b64_encode(dnstap_message_query_message(*d),
+								dnstap_message_query_message_length(*d),
+								&enc_len);
 
-            sprintf(src, " %lu ", enc_len);
-            strcat(dst, src);
-            strcat(dst, enc);
-            free(enc);
-        }
-        
-        if (!is_query && dnstap_message_has_response_time_sec(*d)
-                && dnstap_message_has_response_message(*d)) {
-            sprintf(src, " %lu", dnstap_message_response_message_length(*d));
-            strcat(dst, src);
+			sprintf(src, " %lu ", enc_len);
+			strcat(dst, src);
+			strcat(dst, enc);
+			free(enc);
+		}
+		
+		if (!is_query && dnstap_message_has_response_time_sec(*d)
+				&& dnstap_message_has_response_message(*d)) {
+			sprintf(src, " %lu", dnstap_message_response_message_length(*d));
+			strcat(dst, src);
 
-            enc = b64_encode(dnstap_message_response_message(*d),
-                                dnstap_message_response_message_length(*d),
-                                &enc_len);
+			enc = b64_encode(dnstap_message_response_message(*d),
+								dnstap_message_response_message_length(*d),
+								&enc_len);
 
-            sprintf(src, " %lu ", enc_len);
-            strcat(dst, src);
-            strcat(dst, enc);
-            free(enc);
-        }
-    }
+			sprintf(src, " %lu ", enc_len);
+			strcat(dst, src);
+			strcat(dst, enc);
+			free(enc);
+		}
+	}
 
-    return dst;
+	return dst;
 err:
-    return NULL;
+	return NULL;
 }
 
 static int decode(const char *name, const CODE *codetab)
@@ -164,14 +164,18 @@ static int decode(const char *name, const CODE *codetab)
 	return -1;
 }
 
-static int pencode(const char *s)
+static int pencode(const char *fn)
 {
 	int facility, level;
+	char name[64];
+	char *s;
 	char *separator;
 
-	assert(s);
+	assert(fn);
 
-	separator = strchr(s, '.');
+	strncpy(name, fn, sizeof(name));
+	s = name;
+	separator = strchr(name, '.');
 	if (separator) {
 		*separator = '\0';
 		facility = decode(s, facilitynames);
@@ -190,24 +194,42 @@ static int pencode(const char *s)
 
 void usage(char *argv[])
 {
-    fprintf(stderr, "usage: %s <-u unix socket path> <-p facility.priority> " \
-                    "[-l facility.priority for log] [-d]\n",
-            argv[0]);
+	fprintf(stderr, "usage: %s [-u unix socket path] [-L tcp listen ip] " \
+					"[-P tcp listen port]> [-p facility.priority] " \
+					"[-l facility.priority for log] [-d]\n",
+					argv[0]);
+	fprintf(stderr, "\t-u: Unix socket path of the dnsptap server to " \
+					"receive dnstap payloads.\n");
+	fprintf(stderr, "\t    Default: /var/run/named/dnstap.sock\n");
+	fprintf(stderr, "\t-L: IP of the dnsptap server to receive dnstap payloads.\n");
+	fprintf(stderr, "\t    Default: 0.0.0.0\n");
+	fprintf(stderr, "\t-P: Port of the dnstap receiver is listening on.\n");
+	fprintf(stderr, "\t    Default: 6000\n");
+	fprintf(stderr, "\t-p: Syslog facility name and priority name.\n");
+	fprintf(stderr, "\t    Default: local6.info\n");
+	fprintf(stderr, "\t-l: Syslog facility name and priority name for log.\n");
+	fprintf(stderr, "\t    Default: local6.debug\n");
+	fprintf(stderr, "\t-d: Daemon, run in the background.\n");
+	fprintf(stderr, "\t-h: Show this info.\n");
+	fprintf(stderr, "\tDnstap-sensor is running on unix socket by default.\n");
 
 	exit(1);
 }
 
 int main(int argc, char* argv[])
 {
-    int pri;
-    char *log;
+	int pri;
+	char *log;
 	int ch;
-    char *sun_path = NULL;
-    char *fac_pri = NULL;
-    char *log_fac_pri = "local6.debug";
-    int dn = 0;
+	char *sun_path = "/var/run/named/dnstap.sock";
+	char *fac_pri = "local6.info";
+	char *log_fac_pri = "local6.debug";
+	int dn = 0;
+	char *listen_ip = "0.0.0.0";
+	int listen_port = 6000;
+	bool tcp_server = false;
 
-	while ((ch = getopt(argc, argv, "u:p:dl:")) != -1) {
+	while ((ch = getopt(argc, argv, "u:p:dl:L:P:h")) != -1) {
 		switch (ch) {
 		case 'd':
 			dn = 1;
@@ -221,127 +243,146 @@ int main(int argc, char* argv[])
 		case 'l':
 			log_fac_pri = optarg;
 			break;
+		case 'L':
+			listen_ip = optarg;
+			tcp_server = true;
+			break;
+		case 'P':
+			listen_port = atoi(optarg);
+			tcp_server = true;
+			break;
+		case 'h':
 		default:
-            usage(argv);
+			usage(argv);
 		}
 	}
-    if (!sun_path || !fac_pri) {
-        usage(argv);
-    }
 
-    g_sh = (struct sensor_handle *) calloc(1, sizeof(struct sensor_handle));
-    if (g_sh == NULL){
-        fprintf(stderr, "Failed to calloc g_sh\n");
-        return 1;
-    }
+	g_sh = (struct sensor_handle *) calloc(1, sizeof(struct sensor_handle));
+	if (g_sh == NULL){
+		fprintf(stderr, "Failed to calloc g_sh\n");
+		return 1;
+	}
 
-    pri = pencode(fac_pri);
-    g_sh->log_pri = pencode(log_fac_pri);
+	pri = pencode(fac_pri);
+	g_sh->log_pri = pencode(log_fac_pri);
 
-    gethostname(g_sh->hostname, sizeof(g_sh->hostname));
+	gethostname(g_sh->hostname, sizeof(g_sh->hostname));
 
-    struct dnswire_reader reader;
-    if (dnswire_reader_init(&reader) != dnswire_ok) {
-        fprintf(stderr, "Unable to initialize dnswire reader\n");
-        return 1;
-    }
-    if (dnswire_reader_allow_bidirectional(&reader, true) != dnswire_ok) {
-        fprintf(stderr, "Unable to set dnswire reader to bidirectional mode\n");
-        return 1;
-    }
+	struct dnswire_reader reader;
+	if (dnswire_reader_init(&reader) != dnswire_ok) {
+		fprintf(stderr, "Unable to initialize dnswire reader\n");
+		return 1;
+	}
+	if (dnswire_reader_allow_bidirectional(&reader, true) != dnswire_ok) {
+		fprintf(stderr, "Unable to set dnswire reader to bidirectional mode\n");
+		return 1;
+	}
 
 	if (dn && daemon(1, 0) == -1)
 		err(1, "unable to daemonize");
 
 	signal(SIGPIPE, SIG_IGN);
 
-    sensor_log_init(g_sh);
+	sensor_log_init(g_sh);
 
-    /******************************************/
-    int reader_sockfd;
-    struct sockaddr_un path;
-    int ret;
+	/******************************************/
+	int reader_sockfd;
+	int domain = AF_UNIX;
+	struct sockaddr_un path;
+	struct sockaddr_in servaddr;
+	int ret;
 
-    memset(&path, 0, sizeof(struct sockaddr_un));
-    path.sun_family = AF_UNIX;
-    strncpy(path.sun_path, sun_path, sizeof(path.sun_path) - 1);
+	if (!tcp_server) {
+		memset(&path, 0, sizeof(struct sockaddr_un));
+		path.sun_family = AF_UNIX;
+		strncpy(path.sun_path, sun_path, sizeof(path.sun_path) - 1);
 
-    /* Remove a previously bound socket existing on the filesystem. */	
-    ret = remove(path.sun_path);
-    if (ret != 0 && errno != ENOENT) {
-        fprintf(stderr, "Failed to remove existing socket path %s\n", 
-                    path.sun_path);
-		return false;
-    }
-    reader_sockfd = socket(AF_UNIX, SOCK_STREAM, 0);
-    if (reader_sockfd == -1) {
-        fprintf(stderr, "socket() failed: %s\n", strerror(errno));
-        return 1;
-    }
-    printf("socket\n");
+		/* Remove a previously bound socket existing on the filesystem. */	
+		ret = remove(path.sun_path);
+		if (ret != 0 && errno != ENOENT) {
+			fprintf(stderr, "Failed to remove existing socket path %s\n", 
+						path.sun_path);
+			return false;
+		}
+	} else {
+		domain = AF_INET;
+		memset(&servaddr, 0, sizeof(struct sockaddr_in));
+		servaddr.sin_family = AF_INET;
+		servaddr.sin_addr.s_addr = inet_addr(listen_ip);
+		servaddr.sin_port = htons(listen_port);
+	}
 
-    if (bind(reader_sockfd, (struct sockaddr*)&path, sizeof(struct sockaddr_un))) {
-        fprintf(stderr, "bind() failed: %s\n", strerror(errno));
-        close(reader_sockfd);
-        return 1;
-    }
-    printf("bind\n");
+	reader_sockfd = socket(domain, SOCK_STREAM, 0);
+	if (reader_sockfd == -1) {
+		fprintf(stderr, "socket() failed: %s\n", strerror(errno));
+		return 1;
+	}
+	printf("socket\n");
 
-    if (listen(reader_sockfd, 1)) {
-        fprintf(stderr, "listen() failed: %s\n", strerror(errno));
-        close(reader_sockfd);
-        return 1;
-    }
-    printf("listen\n");
+	if (bind(reader_sockfd, 
+			tcp_server ? (struct sockaddr*)&servaddr : (struct sockaddr*)&path, 
+			sizeof(struct sockaddr_un))) {
+		fprintf(stderr, "bind() failed: %s\n", strerror(errno));
+		close(reader_sockfd);
+		return 1;
+	}
+	printf("bind\n");
 
-    int clifd = accept(reader_sockfd, 0, 0);
-    if (clifd < 0) {
-        fprintf(stderr, "accept() failed: %s\n", strerror(errno));
-        close(reader_sockfd);
-        return 1;
-    }
-    printf("accept\n");
+	if (listen(reader_sockfd, 1)) {
+		fprintf(stderr, "listen() failed: %s\n", strerror(errno));
+		close(reader_sockfd);
+		return 1;
+	}
+	printf("listen\n");
 
-    /******/
-    int done = 0;
+	int clifd = accept(reader_sockfd, 0, 0);
+	if (clifd < 0) {
+		fprintf(stderr, "accept() failed: %s\n", strerror(errno));
+		close(reader_sockfd);
+		return 1;
+	}
+	printf("accept\n");
 
-    printf("receiving...\n");
-    while (!done) {
-        switch (dnswire_reader_read(&reader, clifd)) {
-        case dnswire_have_dnstap:
-            g_sh->count_input++;
-            log = print_dnstap(dnswire_reader_dnstap(reader));
-            if (log) {
-                g_sh->count_output++;
-                syslog(pri, "%s", log);
-                if (!dn)
-                    printf("%s\n", log);
-            }
-            break;
-        case dnswire_again:
-        case dnswire_need_more:
-            /*
-             * This indicates that we need to call the reader again as it
-             * will only do one pass in a non-blocking fasion.
-             */
-            break;
-        case dnswire_endofdata:
-            /*
-             * The stream was stopped from the sender side, we're done!
-             */
-            printf("stopped\n");
-            done = 1;
-            break;
-        default:
-            fprintf(stderr, "dnswire_reader_read() error\n");
-            done = 1;
-        }
-    }
+	/******/
+	int done = 0;
 
-    dnswire_reader_destroy(reader);
-    shutdown(clifd, SHUT_RDWR);
-    close(clifd);
-    close(reader_sockfd);
+	printf("receiving...\n");
+	while (!done) {
+		switch (dnswire_reader_read(&reader, clifd)) {
+		case dnswire_have_dnstap:
+			g_sh->count_input++;
+			log = print_dnstap(dnswire_reader_dnstap(reader));
+			if (log) {
+				g_sh->count_output++;
+				syslog(pri, "%s", log);
+				if (!dn)
+					printf("%s\n", log);
+				}
+			break;
+		case dnswire_again:
+		case dnswire_need_more:
+			/*
+			 * This indicates that we need to call the reader again as it
+			 * will only do one pass in a non-blocking fasion.
+			 */
+			break;
+		case dnswire_endofdata:
+			/*
+			 * The stream was stopped from the sender side, we're done!
+			 */
+			printf("stopped\n");
+			done = 1;
+			break;
+		default:
+			fprintf(stderr, "dnswire_reader_read() error\n");
+			done = 1;
+		}
+	}
 
-    return 0;
+	dnswire_reader_destroy(reader);
+	shutdown(clifd, SHUT_RDWR);
+	close(clifd);
+	close(reader_sockfd);
+
+	return 0;
 }

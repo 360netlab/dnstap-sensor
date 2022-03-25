@@ -1,0 +1,14 @@
+#
+*.o
+*.rpm
+
+bin/
+lib/
+rpmbuild/RPMS/
+share/
+.vscode/
+
+include/dnswire/
+include/tinyframe/
+
+src/sensor/dnstap-sensor

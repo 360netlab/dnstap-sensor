@@ -7,15 +7,25 @@ Base64 copy from this [repository](https://github.com/littlstar/b64.c).
 ### Usage
 
 ```
-dnstap-sensor <-u unix socket path> <-p facility.priority> [-d]
+dnstap-sensor [-u unix socket path] [-L tcp listen ip] [-P tcp listen port]> [-p facility.priority] [-l facility.priority for log] [-d]
 
 arguments:
-	-u: read dnstap payloads from unix socket
-	-p: syslog facility namde and priority name
-	-d: daemon, run in the background
+    -u: Unix socket path of the dnsptap server to receive dnstap payloads.
+        Default: /var/run/named/dnstap.sock
+    -L: IP of the dnsptap server to receive dnstap payloads.
+        Default: 0.0.0.0
+    -P: Port of the dnstap receiver is listening on.
+        Default: 6000
+    -p: Syslog facility name and priority name.
+        Default: local6.info
+    -l: Syslog facility name and priority name for log.
+        Default: local6.debug
+    -d: Daemon, run in the background.
+    -h: Show this info.
+    Dnstap-sensor is running on unix socket by default.
 
 For example:
-dnstap-sensor -u /var/run/named/dnstap.sock -p local6.info -d
+dnstap-sensor -L 127.0.0.1 -P 8000 -p local5.info -d
 ```
 
 Notice:
